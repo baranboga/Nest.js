@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//Burada schemalarımızı oluşturuyoruz. Daha sonra prisma migrate komutu ile bu schemaları veritabanımıza uygulayacağız.
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+// @unique ile email alanının benzersiz olmasını sağlıyoruz.
+  email String @unique
+  hash  String
+
+  firstName String?
+  lastName  String?
+
+  bookmarks Bookmark[]
+
+// @@map("users") ile bu modelin veritabanında users tablosuna karşılık geldiğini belirtiyoruz.
+  @@map("users")
+}
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String
+  description String?
+  link        String
+
+  //@relation ile bu modelin User modeli ile ilişkili olduğunu belirtiyoruz.
+  //fields: [userId] ile bu ilişkinin userId alanı ile sağlandığını belirtiyoruz.
+  //references: [id] ile bu ilişkinin User modelinin id alanı ile sağlandığını belirtiyoruz.
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+ //@@map("bookmarks") ile bu modelin veritabanında bookmarks tablosuna karşılık geldiğini belirtiyoruz.
+  @@map("bookmarks")
+}
