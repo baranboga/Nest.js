@@ -5,9 +5,12 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { PrismaModule } from './prisma/prisma.module';
+import {QuestionsModule} from './questions/questions.module';
+import {CategoriesModule} from './categories/categories.module';
 
 @Module({
   imports: [
+    //ConfigModule is imported in the AppModule to make the configuration available throughout the application.
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -15,6 +18,8 @@ import { PrismaModule } from './prisma/prisma.module';
     UserModule,
     BookmarkModule,
     PrismaModule,
+    QuestionsModule,
+    CategoriesModule
   ],
 })
 export class AppModule {}
