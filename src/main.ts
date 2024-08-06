@@ -22,6 +22,9 @@ SwaggerModule.setup('api', app, document);
       whitelist: true,
     }),
   );
+  app.enableCors({
+    origin: '*', // Tüm kaynaklardan gelen isteklere izin verir
+  });
   await app.listen(3333);
 }
 bootstrap();

@@ -27,6 +27,11 @@ import { DeleteQuestionDto } from './dto';
       return this.QuestionService.getQuestions();
     }
 
+    @Get('getQuestionByCategoryIdRandom/:CategoryId')
+    getQuestionByCategoryIdRandom(@Param('CategoryId', ParseIntPipe) id: number) {
+      return this.QuestionService.getQuestionByCategoryIdRandom(id);
+    }
+
     @Post()
     createQuestion(@Body() body: CreateQuestionDto) {
       return this.QuestionService.createQuestion(body);

@@ -17,11 +17,29 @@ import { DeleteQuestionDto } from './dto/delete-question.dto';
     async getQuestions() {
       return await this.prisma.question.findMany();
     }
+
+    async getQuestionByCategoryIdRandom(id: number) {
+      const questions = await this.prisma.question.findMany({
+        where: {
+          categoryId: id,
+        },
+      });
+    
+      // Eğer hiç soru yoksa, boş döndür
+      if (questions.length === 0) {
+        return null;
+      }
+    
+      // Rastgele bir soru seçin
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      return questions[randomIndex];
+    }
       
     async createQuestion(dto: CreateQuestionDto) {
       try {
         return await this.prisma.question.create({
           data: {
+            categoryId: dto.categoryId,
             ...dto,
           },
         });

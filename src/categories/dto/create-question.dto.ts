@@ -7,5 +7,12 @@ export class CreateCategoryDto {
   @IsNotEmpty()
   name: string;
 
+
+
+
+
+
+
+
   
 }
