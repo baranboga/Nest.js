@@ -1,15 +1,28 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('NestJS API')
+    .setDescription('The NestJS API description')
+    .setVersion('1.0')
+    .addBearerAuth() // JWT authentication için
+    .build();
+    
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
   app.useGlobalPipes(
     new ValidationPipe({
-      //fazladan gelen veriyi engellemek için whitelist: true diyerek sadece gelen veriyi kabul eder.
       whitelist: true,
     }),
   );
+  
   await app.listen(3333);
 }
 bootstrap();

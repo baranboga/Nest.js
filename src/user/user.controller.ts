@@ -10,27 +10,24 @@ import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard';
 import { EditUserDto } from './dto';
 import { UserService } from './user.service';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-@UseGuards(JwtGuard)   //bu controller a sadece login olan kullanıcılar erişebilir. @UseGuards(JwtGuard): Bu guard, UserController'a yapılan tüm isteklerde JWT doğrulaması yapar. Bu, sadece geçerli bir JWT'ye sahip kullanıcıların bu controller'a erişebileceği anlamına gelir.
-                       //istenirse direk istek özelinde de kullanılabilir.
+@ApiTags('Users')
+@ApiBearerAuth()
+@UseGuards(JwtGuard)
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
 
-  
+  //Burada GetUser decorator'ı kullanılarak kullanıcının bilgileri alınıyor. bunu guarddan dönen request'den de alıyoruz.
+  //Getuser dekaratörü jwt strategy den dönen user bilgisini alıyor.
+  @ApiOperation({ summary: 'Get current user profile' })
   @Get('me')
   getMe(@GetUser() user: User) {
     return user;
   }
 
-  //Yukarıdaki işlemin aynısını Request objesi ile de yapabiliriz. Özel dekaratörler kullanmamıza gerek yoktur.
-  // @Get('me')
-  // getMe(@Req() request: Request) {    // Kullanıcı bilgilerini request.user içinden alıyoruz
-  //   // Kullanıcı bilgilerini request.user içinden alıyoruz
-  //   const user = request.user;
-  //   return user;
-  // }
-
+  @ApiOperation({ summary: 'Edit user profile' })
   @Patch()
   editUser(
     @GetUser('id') userId: number,
