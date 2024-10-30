@@ -1,35 +1,44 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import { Type } from 'class-transformer';
-import { IsArray, IsEmail, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { CreateBookmarkDto } from 'src/bookmark/dto';
+import { IsEmail, IsNotEmpty, IsString, IsArray, IsOptional, ValidateNested } from "class-validator";
+import { CreateBookmarkDto } from "src/bookmark/dto";
 
-export class EditUserDto {
+export class CreateUserDto {
   @ApiProperty({
-    description: 'Updated email address',
-    example: 'updated@example.com',
-    required: false
+    description: 'Email address of the user',
+    example: 'user@example.com',
+    required: true
   })
   @IsEmail()
-  @IsOptional()
-  email?: string;
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({
+    description: 'Password of the user',
+    example: 'password123',
+    required: true
+  })
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 
   @ApiProperty({
     description: 'First name of the user',
     example: 'John',
-    required: false
+    required: true
   })
   @IsString()
-  @IsOptional()
-  firstName?: string;
+  @IsNotEmpty()
+  firstName: string;
 
   @ApiProperty({
     description: 'Last name of the user',
     example: 'Doe',
-    required: false
+    required: true
   })
   @IsString()
-  @IsOptional()
-  lastName?: string;
+  @IsNotEmpty()
+  lastName: string;
 
   @ApiProperty({
     description: 'Bookmarks of the user',
