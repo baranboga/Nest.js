@@ -29,21 +29,21 @@ model User {
   @@map("users")
 }
 
+//@relation ile bu modelin User modeli ile ilişkili olduğunu belirtiyoruz.
+  //fields: [userId] ile bu ilişkinin userId alanı ile sağlandığını belirtiyoruz.
+  //references: [id] ile bu ilişkinin User modelinin id alanı ile sağlandığını belirtiyoruz.
 model Bookmark {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   title       String
   description String?
   link        String
+  fileUrl     String?  // Dosya URL'i için yeni alan
+  fileName    String?  // Dosya adı için yeni alan
+  fileType    String?  // Dosya tipi için yeni alan
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
 
-  //@relation ile bu modelin User modeli ile ilişkili olduğunu belirtiyoruz.
-  //fields: [userId] ile bu ilişkinin userId alanı ile sağlandığını belirtiyoruz.
-  //references: [id] ile bu ilişkinin User modelinin id alanı ile sağlandığını belirtiyoruz.
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
- //@@map("bookmarks") ile bu modelin veritabanında bookmarks tablosuna karşılık geldiğini belirtiyoruz.
   @@map("bookmarks")
 }

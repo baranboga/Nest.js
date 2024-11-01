@@ -4,6 +4,7 @@ import { EditUserDto } from './dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon from 'argon2';
 import { Prisma } from '@prisma/client';
+import { unlinkAsync } from 'fs-extra';
 
 @Injectable()
 export class UserService {
@@ -46,18 +47,33 @@ export class UserService {
 
   // Burada bir Nested Writes (İlişkisel Yazma) yapıyoruz. Yani kullanıcı oluştururken, kullanıcıya ait bookmark'ları da birlikte oluşturabiliriz.
   // Burada dto.bookmarks ile dto'daki bookmarks'ı oluşturuyoruz.
-  async createUser(dto: CreateUserDto) {
+  async createUser(dto: CreateUserDto, files?: Express.Multer.File[]) {
     const hash = await argon.hash(dto.password);
-    
-    // dto'dan password'ü çıkarıp, yerine hash'i koyalım
-    const { password, ...userData } = dto;
-    console.log(dto);
+    const { password, bookmarks, ...userData } = dto;
+
+
+
+    // Bookmark'ları ve dosyaları eşleştir
+    const bookmarksWithFiles = bookmarks?.map((bookmark, index) => {
+      const file = files?.[index];
+      console.log(`Processing bookmark ${index} with file:`, file);  // Her bookmark için dosya eşleştirmesini logla
+
+      return {
+        ...bookmark,
+        fileUrl: file ? `uploads/${file.filename}` : null,
+        fileName: file ? file.originalname : null,
+        fileType: file ? file.mimetype : null,
+      };
+    });
+
+    console.log('Bookmarks with files:', bookmarksWithFiles);  // Debug için son halini logla
+
     const user = await this.prisma.user.create({
       data: {
-        ...userData,  // password hariç diğer alanlar
-        hash,         // hashlenmiş şifre
+        ...userData,
+        hash,
         bookmarks: {
-          create: dto.bookmarks,
+          create: bookmarksWithFiles,
         },
       },
       include: {
@@ -65,19 +81,61 @@ export class UserService {
       },
     });
 
+    delete user.hash;
     return user;
   }
 
-  async updateUser(userId: number, dto: EditUserDto) {
+  async updateUser(userId: number, dto: EditUserDto, files?: Express.Multer.File[]) {
+    const { bookmarks, ...userData } = dto;
+
+    // Bookmark'ları ve dosyaları eşleştir
+    const bookmarksWithFiles = bookmarks?.map((bookmark, index) => {
+      const file = files?.[index];
+      console.log(`Processing bookmark ${index} with file:`, file);
+
+      return {
+        ...bookmark,
+        fileUrl: file ? `uploads/${file.filename}` : null,
+        fileName: file ? file.originalname : null,
+        fileType: file ? file.mimetype : null,
+      };
+    });
+
+    // Önce mevcut bookmark'ların dosyalarını sil
+    const existingBookmarks = await this.prisma.bookmark.findMany({
+      where: { userId: userId }
+    });
+
+    // Mevcut dosyaları sil
+    for (const bookmark of existingBookmarks) {
+      if (bookmark.fileUrl) {
+        const filePath = bookmark.fileUrl.replace('uploads/', '');
+        try {
+          await unlinkAsync(`uploads/${filePath}`);
+        } catch (error) {
+          console.error('Error deleting file:', error);
+        }
+      }
+    }
+
+    // Kullanıcıyı ve bookmark'ları güncelle
     const user = await this.prisma.user.update({
-      where: { id: userId },
+      where: {
+        id: userId,
+      },
       data: {
-        ...dto,
+        ...userData,
         bookmarks: {
-          create: dto.bookmarks,
+          deleteMany: {}, // Önce tüm bookmark'ları sil
+          create: bookmarksWithFiles || [], // Sonra yenilerini oluştur
         },
       },
+      include: {
+        bookmarks: true,
+      },
     });
+
+    delete user.hash;
     return user;
   }
 }

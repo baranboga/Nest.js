@@ -28,4 +28,39 @@ export class EditBookmarkDto {
   @IsString()
   @IsOptional()
   link?: string;
+
+  @ApiProperty({
+    description: 'File to upload (jpeg, png, pdf only)',
+    type: 'string',
+    format: 'binary',  
+    required: false
+  })
+  @IsOptional()
+  file?: any;
+
+  @ApiProperty({
+    description: 'File URL after upload',
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  fileUrl?: string;
+
+  @ApiProperty({
+    description: 'Original file name',
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  fileName?: string;
+
+  @ApiProperty({
+    description: 'File MIME type',
+    required: false
+  })
+  @IsString()
+  @IsOptional()
+  fileType?: string;
+
+
 }

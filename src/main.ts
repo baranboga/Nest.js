@@ -2,21 +2,29 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
+  // Static dosya servisi için
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('NestJS API')
     .setDescription('The NestJS API description')
     .setVersion('1.0')
-    .addBearerAuth() // JWT authentication için
+    .addBearerAuth()
     .build();
-  // Swagger configuration
-  
     
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    deepScanRoutes: true,
+  });
+  
   SwaggerModule.setup('api', app, document);
 
   app.useGlobalPipes(
@@ -159,7 +167,6 @@ bootstrap();
 // 4-Controller'da Kullanıcı Bilgilerini Yakalama: GetUser dekoratörü kullanılarak request.user içindeki kullanıcı bilgileri alınır ve controller metoduna parametre olarak geçilir.
 
 //NEST JS SORGU İŞLEMLERİ
-
 
 
 //   // 1. Create (Ekleme) - Yeni bir kullanıcı ekler
@@ -322,3 +329,37 @@ bootstrap();
 
 
 
+// DOSYA YÜKLEME İŞLEMLERİ
+
+//1. Gerekli Paketlerin Yüklenmesi:
+//npm install @nestjs/platform-express multer @types/multer
+
+//2. Prisma Schema'ya Yeni Alanlar Ekleme:
+// fileUrl: Dosyanın URL'i
+// fileName: Dosyanın orijinal adı
+// fileType: Dosya tipi (MIME type)
+
+//3. Migration Oluşturma:
+//npx prisma migrate dev --name init
+
+//4. CreateBookmarkDto'ya File Alanı Ekleme:
+//@ApiProperty ile Swagger dokümantasyonu
+//@IsOptional() ile opsiyonel alan tanımlama
+//file?: any tipinde alan ekleme
+
+//5. BookmarkController'da FileInterceptor Ayarları:
+// @UseInterceptors(FileInterceptor()) ekleme
+// Dosya kayıt yeri (destination) ayarlama
+// Dosya adı formatı belirleme
+// Dosya tipi kontrolü (JPEG, PNG, PDF)
+// Dosya boyutu limiti (5MB)
+
+//6.Swagger Dokümantasyonu:
+// @ApiConsumes('multipart/form-data')
+// @ApiBody ile şema tanımlama
+// File upload alanı için binary format
+
+//Static Dosya Servisi:
+//main.ts'de NestExpressApplication kullanma
+//useStaticAssets ile uploads klasörünü public yapma
+///uploads prefix'i ile dosyalara erişim
