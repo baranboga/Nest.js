@@ -8,19 +8,20 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-@ApiTags('auth') // Burada 'Users' tag'ini ekliyoruz
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @ApiOperation({ summary: 'Sign up a new user' })
   @Post('signup')
   signup(@Body() dto: AuthDto) {
     return this.authService.signup(dto);
   }
 
-  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Sign in existing user' })
   @Post('signin')
   signin(@Body() dto: AuthDto) {
     return this.authService.signin(dto);

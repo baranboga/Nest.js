@@ -1,19 +1,31 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Static dosya servisi için
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
+  // Swagger configuration
   const config = new DocumentBuilder()
-  .setTitle('API Dokümantasyonu')
-  .setDescription('API dokümantasyonunun açıklaması')
-  .setVersion('1.0')
-  .addTag('API')
-  .build();
-const document = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('api', app, document);
+    .setTitle('NestJS API')
+    .setDescription('The NestJS API description')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+    
+  const document = SwaggerModule.createDocument(app, config, {
+    deepScanRoutes: true,
+  });
+  
+  SwaggerModule.setup('api', app, document);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -21,6 +33,7 @@ SwaggerModule.setup('api', app, document);
       transform: true,
       whitelist: true,
     }),
+    
   );
   app.enableCors({
     origin: '*', // Tüm kaynaklardan gelen isteklere izin verir
@@ -157,6 +170,200 @@ bootstrap();
 // 3-Kullanıcı Bilgilerinin Eklenmesi: Doğrulanan kullanıcı bilgileri request.user içine eklenir.
 // 4-Controller'da Kullanıcı Bilgilerini Yakalama: GetUser dekoratörü kullanılarak request.user içindeki kullanıcı bilgileri alınır ve controller metoduna parametre olarak geçilir.
 
-//CUSTOM DECORATOR
+//NEST JS SORGU İŞLEMLERİ
 
 
+//   // 1. Create (Ekleme) - Yeni bir kullanıcı ekler
+
+//   async createUser(data: { email: string; name?: string }) {
+//     return await this.prisma.user.create({
+//       data, // Yeni bir kullanıcı eklenir
+//     });
+//   }
+
+//   // 2. Find Unique (Tekil Bulma) - ID veya başka benzersiz bir alan ile kullanıcı bulur
+
+//   async findUserById(userId: number) {
+//     return await this.prisma.user.findUnique({
+//       where: { id: userId }, // Yalnızca ID eşleşen tekil bir kullanıcı döndürülür
+//     });
+//   }
+
+//   // 3. Find First (İlk Bulma) - Belirli koşulları sağlayan ilk kullanıcıyı bulur
+
+//   async findFirstUser(email: string) {
+//     return await this.prisma.user.findFirst({
+//       where: { email }, // İlk eşleşen kullanıcı döndürülür
+//     });
+//   }
+
+//   // 4. Find Many (Çoğul Bulma) - Belirli koşullara uyan tüm kullanıcıları bulur
+
+//   async findUsersByCondition(condition: { isActive?: boolean }) {
+//     return await this.prisma.user.findMany({
+//       where: condition, // Şartlara uyan tüm kullanıcılar döndürülür
+//       orderBy: { createdAt: 'desc' }, // İsteğe bağlı: Son eklenenden ilk eklenene doğru sıralanır
+//     });
+//   }
+
+//   // 5. Update (Güncelleme) - ID ile kullanıcı günceller
+
+//   async updateUser(userId: number, data: { email?: string; name?: string }) {
+//     return await this.prisma.user.update({
+//       where: { id: userId }, // Güncellenecek kullanıcı ID ile seçilir
+//       data: { 
+//           email: data.email, // Eğer data.email varsa, email alanını günceller
+//           name: data.name    // Eğer data.name varsa, name alanını günceller
+//       } 
+//   });
+// }
+
+//   // 6. Delete (Silme) - ID ile kullanıcı siler
+
+//   async deleteUser(userId: number) {
+//     return await this.prisma.user.delete({
+//       where: { id: userId }, // Belirtilen ID'ye sahip kullanıcı silinir
+//     });
+//   }
+
+//   // 7. Upsert (Güncelle ya da Ekle) - Eğer kullanıcı varsa günceller, yoksa ekler
+
+//   async upsertUser(email: string, data: { name?: string }) {
+//     return await this.prisma.user.upsert({
+//       where: { email }, // E-posta adresine göre kullanıcı aranır
+//       update: data, // Eğer kullanıcı varsa güncellenir
+//       create: { email, ...data }, // Yoksa yeni bir kullanıcı eklenir
+//     });
+//   }
+
+//   // 8. Aggregation (Toplu İşlemler) - Kullanıcı sayısı ve diğer toplu işlemler
+
+//   async countActiveUsers() {
+//     return await this.prisma.user.count({
+//       where: { isActive: true }, // Aktif kullanıcı sayısı döndürülür
+//     });
+//   }
+
+//   // 9. Group By - Kullanıcıları belirli bir alana göre gruplar
+
+/// Kullanıcıları "status" alanına göre gruplar ve her gruptaki kullanıcı sayısını döndürür
+// async groupUsersByStatus() {
+//   return await this.prisma.user.groupBy({
+//       by: ['status'], // "status" alanına göre gruplar
+//       _count: { 
+//           _all: true // Her gruptaki toplam kullanıcı sayısını döndürür
+//       },
+//       // İsteğe bağlı olarak diğer aggregate işlemlerini ekleyebilirsiniz:
+//       _sum: {
+//           age: true, // Her gruptaki yaşların toplamını döndürür (örnek)
+//       },
+//       _avg: {
+//           age: true, // Her gruptaki yaşların ortalamasını döndürür (örnek)
+//       },
+//       _min: {
+//           createdAt: true // Her gruptaki en eski "createdAt" değerini döndürür (örnek)
+//       },
+//       _max: {
+//           createdAt: true // Her gruptaki en yeni "createdAt" değerini döndürür (örnek)
+//       }
+//   });
+// }
+
+//   // 10. Select (Seçim) - Belirli alanları seçerek kullanıcıyı döndürür
+
+//   async selectUserFields(userId: number) {
+//     return await this.prisma.user.findUnique({
+//       where: { id: userId },
+//       select: {
+//         id: true,
+//         email: true, // Sadece ID ve e-posta alanları döndürülür
+//       },
+//     });
+//   }
+
+//   // 11. Include (İlişkisel Veri Getirme) - Kullanıcı ile ilişkili verilere ulaşır
+
+//   async getUserWithPosts(userId: number) {
+//     return await this.prisma.user.findUnique({
+//       where: { id: userId },
+//       include: {
+//         posts: true, // Kullanıcı ile ilişkili tüm gönderiler döndürülür
+//       },
+//     });
+//   }
+
+//   // 12. Nested Writes (İlişkisel Yazma) - Kullanıcıya yeni bir gönderi ekler
+// Nested Writes, bir kayıt oluşturulurken veya güncellenirken ilişkili verilerin (örneğin, bir kullanıcının sahip olduğu yer işaretleri) aynı işlemde yazılmasına olanak tanır. 
+// Yani, kullanıcıyı oluştururken, kullanıcıya ait bookmark'ları da birlikte oluşturabilirsiniz.
+
+//   async createUserWithPost(data: {
+//     email: string;
+//     name: string;
+//     postTitle: string;
+//   }) {
+//     return await this.prisma.user.create({
+//       data: {
+//         email: data.email,
+//         name: data.name,
+//         posts: {
+//           create: { title: data.postTitle }, // Kullanıcı ile birlikte bir gönderi oluşturur
+//         },
+//       },
+//     });
+//   }
+
+//   // 13. Transaction (İşlem) - Bir dizi sorguyu tek bir işlemde yürütür
+//   async createUserAndPost(email: string, postTitle: string) {
+//     return await this.prisma.$transaction([
+//       this.prisma.user.create({ data: { email } }),
+//       this.prisma.post.create({ data: { title: postTitle, authorEmail: email } }),
+//     ]);
+//   }
+
+// Tüm sorgular ya birlikte başarılı olur ya da hiçbiri uygulanmaz. 
+// Yani, eğer kullanıcı oluşturma işlemi başarılı ama post oluşturma işlemi başarısız olursa, kullanıcı kaydı da geri alınır.
+//  Bu, veritabanınızda tutarlılığı sağlar.
+
+
+//   // 14. Raw Query (Ham Sorgu) - Özel SQL sorguları yürütür
+//   async getRawUserData() {
+//     return await this.prisma.$queryRaw`SELECT * FROM User;`; // SQL sorgusu ile kullanıcıları döndürür
+//   }
+// }
+
+
+
+// DOSYA YÜKLEME İŞLEMLERİ
+
+//1. Gerekli Paketlerin Yüklenmesi:
+//npm install @nestjs/platform-express multer @types/multer
+
+//2. Prisma Schema'ya Yeni Alanlar Ekleme:
+// fileUrl: Dosyanın URL'i
+// fileName: Dosyanın orijinal adı
+// fileType: Dosya tipi (MIME type)
+
+//3. Migration Oluşturma:
+//npx prisma migrate dev --name init
+
+//4. CreateBookmarkDto'ya File Alanı Ekleme:
+//@ApiProperty ile Swagger dokümantasyonu
+//@IsOptional() ile opsiyonel alan tanımlama
+//file?: any tipinde alan ekleme
+
+//5. BookmarkController'da FileInterceptor Ayarları:
+// @UseInterceptors(FileInterceptor()) ekleme
+// Dosya kayıt yeri (destination) ayarlama
+// Dosya adı formatı belirleme
+// Dosya tipi kontrolü (JPEG, PNG, PDF)
+// Dosya boyutu limiti (5MB)
+
+//6.Swagger Dokümantasyonu:
+// @ApiConsumes('multipart/form-data')
+// @ApiBody ile şema tanımlama
+// File upload alanı için binary format
+
+//Static Dosya Servisi:
+//main.ts'de NestExpressApplication kullanma
+//useStaticAssets ile uploads klasörünü public yapma
+///uploads prefix'i ile dosyalara erişim

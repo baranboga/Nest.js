@@ -40,3 +40,24 @@ export class JwtStrategy extends PassportStrategy(
     return user;     //Bulunan kullanıcı nesnesi döndürülür. Bu kullanıcı nesnesi, NestJS tarafından request.user içine eklenir.
   }
 }
+
+// validate fonksiyonu, JWT doğrulandıktan sonra otomatik olarak çağrılır. İşleyişin nasıl gerçekleştiğini adım adım açıklayayım:
+
+//1- JWT Doğrulaması:
+
+// super({...}) kısmında, passport-jwt kütüphanesi, verilen JWT token'ını doğrulamak için gereken ayarları yapar. Bu ayarlar, token'ın nereden alınacağını (jwtFromRequest) ve hangi anahtarın kullanılacağını (secretOrKey) içerir.
+
+//2- Token'ın Alınması:
+
+// İstek geldiğinde, koruyucu (guard) JwtStrategy'yi çağırır. Bu aşamada, ExtractJwt.fromAuthHeaderAsBearerToken() kullanılarak istek başlığından JWT alınır.7
+
+// 3- Doğrulama Süreci:
+
+// JWT doğrulandığında, passport-jwt kütüphanesi otomatik olarak token içindeki payload'ı çıkarır. Payload, genellikle kullanıcının kimliğini (sub) ve diğer bilgileri içerir.
+// validate Fonksiyonunun Çağrılması:
+
+// JWT doğrulandıktan sonra, validate fonksiyonu çağrılır. Bu metod, çıkarılan payload'ı alır. Payload içindeki kullanıcı kimliğine (sub) dayanarak, veritabanında kullanıcının bilgilerini bulur.
+// Kullanıcı Bilgilerinin Döndürülmesi:
+
+// validate fonksiyonu, bulduğu kullanıcı nesnesini döndürür. Bu kullanıcı nesnesi, NestJS tarafından request.user içine eklenir. Böylece, koruyucu geçerli bir kullanıcı nesnesi sağlar.
+// Özetle, validate fonksiyonu, JWT doğrulama sürecinin doğal bir parçası olarak çağrılır ve başarılı bir doğrulamadan sonra kullanıcının bilgilerini almak için kullanılır. Bu, tüm sürecin otomatik ve kesintisiz bir şekilde işlemesini sağl
