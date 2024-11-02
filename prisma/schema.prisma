@@ -66,13 +66,22 @@ model Question {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   title      String
-  question1  String
-  question2  String
-  question3  String
+  questionContents QuestionContent[]
   lat        Float
   lng        Float
   categoryId Int?
   category   Category? @relation(fields: [categoryId], references: [id])
 
   @@map("questions")
+}
+
+// QuestionContent model
+model QuestionContent {
+  id        Int       @id @default(autoincrement())
+  questionId Int
+  content   String
+  isCorrect Boolean?
+  question  Question  @relation(fields: [questionId], references: [id])
+
+  @@map("question_contents")
 }

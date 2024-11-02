@@ -40,6 +40,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   lastName: string;
 
+  //Swagger dökümantasyonu için
+  //Array yapıları için type belirtmek zorunlu
+ // Örnek veriler (example) opsiyonel
   @ApiProperty({
     description: 'Bookmarks of the user',
     type: [CreateBookmarkDto],

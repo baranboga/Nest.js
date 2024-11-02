@@ -4,7 +4,7 @@ CREATE TABLE "users" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "email" TEXT NOT NULL,
-    "hash" TEXT NOT NULL,
+    "hash" TEXT,
     "firstName" TEXT,
     "lastName" TEXT,
 
@@ -19,6 +19,9 @@ CREATE TABLE "bookmarks" (
     "title" TEXT NOT NULL,
     "description" TEXT,
     "link" TEXT NOT NULL,
+    "fileUrl" TEXT,
+    "fileName" TEXT,
+    "fileType" TEXT,
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "bookmarks_pkey" PRIMARY KEY ("id")
@@ -40,11 +43,11 @@ CREATE TABLE "questions" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "title" TEXT NOT NULL,
-    "question1" TEXT,
-    "question2" TEXT,
-    "question3" TEXT,
-    "lat" DOUBLE PRECISION,
-    "lng" DOUBLE PRECISION,
+    "question1" TEXT NOT NULL,
+    "question2" TEXT NOT NULL,
+    "question3" TEXT NOT NULL,
+    "lat" DOUBLE PRECISION NOT NULL,
+    "lng" DOUBLE PRECISION NOT NULL,
     "categoryId" INTEGER,
 
     CONSTRAINT "questions_pkey" PRIMARY KEY ("id")

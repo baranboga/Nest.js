@@ -15,7 +15,7 @@ import {
   import { QuestionService } from './questions.service';
   import { CreateQuestionDto } from './dto';
 import { ApiTags } from '@nestjs/swagger';
-import { DeleteQuestionDto } from './dto';
+import { DeleteQuestionDto } from './dto/delete-question.dto';
   
   @ApiTags('question')
   @Controller('question')

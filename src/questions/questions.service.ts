@@ -5,17 +5,18 @@ import {
   import { PrismaService } from '../prisma/prisma.service';
   import { CreateQuestionDto } from './dto';
   import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import { DeleteQuestionDto } from './dto/delete-question.dto';
+  import { DeleteQuestionDto } from './dto/delete-question.dto';
 
   
   @Injectable()
   export class QuestionService {
     constructor(
       private prisma: PrismaService,
+      
     ) {}
 
     async getQuestions() {
-      return await this.prisma.question.findMany();
+      return await this.prisma.question.findMany({include:{questionContents:true}} as any);
     }
 
     async getQuestionByCategoryIdRandom(id: number) {
@@ -41,6 +42,13 @@ import { DeleteQuestionDto } from './dto/delete-question.dto';
           data: {
             categoryId: dto.categoryId,
             ...dto,
+            questionContents: {
+              create: dto.questionContents.map((content) => ({
+                content: content.content,
+                isCorrect: content.isCorrect,
+                
+              } )),
+            },
           },
         });
       } catch (e) {
@@ -53,23 +61,40 @@ import { DeleteQuestionDto } from './dto/delete-question.dto';
 
     async updateQuestion(id: number, dto: CreateQuestionDto) {
       try {
-      if (dto.title=="deneme") {
-        throw new ForbiddenException("Title cannot be deneme");
-      }
-      else {
+        if (dto.title === "deneme") {
+          throw new ForbiddenException("Title cannot be deneme");
+        }
 
+        // Önce content kontrolü yapalım gerekirse foreach ile veriyi düzenleyelim
+        //Direk dto da düzenleme yapılabilir
+        //map ise veri atamak ya da düzenlemek için kullanılır ve yeni bir array oluşturur
+        dto.questionContents.forEach(content => {
+          if (content.content === "deneme") {
+            content.content="deneme2";
+          }
+        });
+        // Sonra update işlemini yapalım
         return await this.prisma.question.update({
           where: {
             id: id,
           },
           data: {
             ...dto,
+            questionContents: {
+              deleteMany: {}, // Önce mevcut içerikleri sil
+              create: dto.questionContents.map((content) => ({
+                content: content.content,
+                isCorrect: content.isCorrect,
+              })),
+            },
+            
           },
+          include:{questionContents:true}
         });
+      } catch (e) {
+        throw e;
       }
-    } catch (e) {
-      throw e;
-    }}
+    }
 
    async deleteQuestion(id: number) {
      return await this.prisma.question.delete({
