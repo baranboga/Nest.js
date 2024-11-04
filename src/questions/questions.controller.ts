@@ -14,8 +14,10 @@ import {
   } from '@nestjs/common';
   import { QuestionService } from './questions.service';
   import { CreateQuestionDto } from './dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
 import { DeleteQuestionDto } from './dto/delete-question.dto';
+import { UpdateQuestionContentDto } from './dto/update-questionContent.dto';
+import { CreateQuestionContentDto } from './dto/create-questionContent.dto';
   
   @ApiTags('question')
   @Controller('question')
@@ -45,6 +47,35 @@ import { DeleteQuestionDto } from './dto/delete-question.dto';
     @Delete(':id')
     async deleteQuestion(@Param('id', ParseIntPipe) id: number) {
       return this.QuestionService.deleteQuestion(id);
+    }
+
+    @Get('getQuestionContent')
+    getQuestionContent() {
+      return this.QuestionService.getQuestionContent();
+    }
+
+    @Post("createQuesitonContent")
+    createQuestionContent(@Body() body:CreateQuestionContentDto){
+      return this.QuestionService.createQuestionContent(body);
+    }
+
+
+    @Put('updateQuestionContent/:id')
+    updateQuestionContent(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateQuestionContentDto) {
+      return this.QuestionService.updateQuestionContent(id, body);
+    }
+
+    @ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          questionId: { type: 'number' },
+        },
+      },
+    })
+    @Post("assignQuestionContentToQuestion/:questionContentId")
+    assignQuestionContentToQuestion(@Param('questionContentId', ParseIntPipe) questionContentId: number, @Body("questionId",ParseIntPipe) questionId: number) {
+      return this.QuestionService.assingQuestionContentToQuestion(questionContentId, questionId);
     }
 
 

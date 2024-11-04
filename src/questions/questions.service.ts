@@ -6,6 +6,8 @@ import {
   import { CreateQuestionDto } from './dto';
   import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
   import { DeleteQuestionDto } from './dto/delete-question.dto';
+import { UpdateQuestionContentDto } from './dto/update-questionContent.dto';
+import { CreateQuestionContentDto } from './dto/create-questionContent.dto';
 
   
   @Injectable()
@@ -103,7 +105,68 @@ import {
        },
      });
    }
-   
+
+   async getQuestionContent() {
+    return await this.prisma.questionContent.findMany();
+   }
+
+
+   //Alt tablolaro create ederken ilişkili olduğu tabloyu connect ile bağlarız
+   async createQuestionContent(body:CreateQuestionContentDto){
+
+    const { questionId, ...rest } = body;
+    return await this.prisma.questionContent.create({
+    //questionId'yi diğer alanlardan ayırıyoruz
+      data:{
+        ...rest,
+        question:{
+          connect:{
+            id:questionId
+          }
+        }
+      }
+
+      //alernatif olarak şu şekil de yapılabilir
+      // data:{
+      //  ...rest,
+      //  questionId:questionId
+      // }
+    })
+   }
+
+   async updateQuestionContent(id: number, dto: UpdateQuestionContentDto) {
+    return await this.prisma.questionContent.update({
+      where: { id: id },
+      data: dto,
+    });
+  }
+
+  async assingQuestionContentToQuestion(questionContentId:number,questionId:number){
+
+   const question = await this.prisma.question.findUnique({
+    where:{id:questionId}
+   })
+
+
+   //ÖNCE VERİLERİ KONTROL ET!!
+   if(!question){
+    throw new ForbiddenException("Question not found");
+   }
+
+   const questionContent = await this.prisma.questionContent.findUnique({
+    where:{id:questionContentId}
+   })
+
+   if(!questionContent){
+    throw new ForbiddenException("Question content not found");
+   }
+
+
+    return await this.prisma.questionContent.update({
+      where:{id:questionContentId},
+      data:{questionId:questionId}
+    })
+  }
 
 
   }

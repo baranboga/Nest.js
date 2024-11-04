@@ -5,6 +5,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -54,9 +55,7 @@ export class CategoriesService {
   async createCategory(dto: CreateCategoryDto) {
     try {
       return await this.prisma.category.create({
-        data: {
-          ...dto,
-        },
+        data: dto
       });
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
@@ -66,9 +65,32 @@ export class CategoriesService {
     }
   }
 
-  async updateCategory(id: number, dto: CreateCategoryDto) {
-    
-  
+  async updateCategory(id: number, dto: UpdateCategoryDto) {
+    try {
+      return await this.prisma.category.update({
+        where: {
+          id,
+        },
+        //Burada dto içindeki questions arrayini map ederek questionContents ile birlikte create ediyoruz.
+        data: {
+          ...dto,
+          questions: {
+            create: dto.questions.map((question) => ({
+              ...question,
+              questionContents: {
+                create: question.questionContents,
+              },
+            })),
+          },
+        },
+      });
+    }
+    catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        throw new ForbiddenException(e.message);
+      }
+      throw e;
+    }
   }
 
   async deleteCategory(id: number) {

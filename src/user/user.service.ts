@@ -51,8 +51,6 @@ export class UserService {
     const hash = await argon.hash(dto.password);
     const { password, bookmarks, ...userData } = dto;
 
-
-
     // Bookmark'ları ve dosyaları eşleştir
     const bookmarksWithFiles = bookmarks?.map((bookmark, index) => {
       const file = files?.[index];
@@ -73,7 +71,9 @@ export class UserService {
         ...userData,
         hash,
         bookmarks: {
-          create: bookmarksWithFiles,
+          create: bookmarksWithFiles.map((bookmark) => ({
+            ...bookmark,
+          })),
         },
       },
       include: {
@@ -87,7 +87,6 @@ export class UserService {
 
   async updateUser(userId: number, dto: EditUserDto, files?: Express.Multer.File[]) {
     const { bookmarks, ...userData } = dto;
-
     // Bookmark'ları ve dosyaları eşleştir
     const bookmarksWithFiles = bookmarks?.map((bookmark, index) => {
       const file = files?.[index];
