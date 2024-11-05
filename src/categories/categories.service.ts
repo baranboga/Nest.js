@@ -14,7 +14,15 @@ export class CategoriesService {
   ) {}
 
   async getCategories() {
-    return await this.prisma.category.findMany();
+    return await this.prisma.category.findMany({
+      include:{
+        questions:{
+          include:{
+            questionContents:true
+          }
+        }
+      }
+    });
   }
 
   //include bizim için ilişkili tabloları getirmemizi sağlar
