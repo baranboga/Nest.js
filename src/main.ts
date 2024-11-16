@@ -367,3 +367,178 @@ bootstrap();
 //main.ts'de NestExpressApplication kullanma
 //useStaticAssets ile uploads klasörünü public yapma
 ///uploads prefix'i ile dosyalara erişim
+
+//DİKKAT ÇOKLU VERİ GÖNDERİLECEKSE FİLESINCEPTOR VE UPLOADEDFİLES KULLANILACAK.
+//TEKLİ İSE FILEINTERCEPTOR KULLANILACAK. VE UPLOADEDFILE KULLANILACAK.
+//s takısına dikkat.
+//import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
+
+//TEKLI VERİ GÖNDERİLECEKSE
+// @Post('create-case-file-without-files')
+// @UseInterceptors(FileInterceptor('files'))  //buradaki "files" ismini DTO da belirtiyoruz.
+// async createCaseFileWithoutFiles(@Body("data") createCaseFileDto: string, @UploadedFile() file: Express.Multer.File){
+//   const parsedData = JSON.parse(createCaseFileDto);
+//   return this.caseFileService.createCaseFileWithoutFiles(parsedData,file);
+// }
+
+//ÇOKLU VERİ GÖNDERİLECEKSE
+// @Post('create-case-file-with-files')
+// @UseInterceptors(FileFieldsInterceptor([{ name: 'files', maxCount: 10 }]))
+// async createCaseFileWithFiles(@Body("data") createCaseFileDto: string, @UploadedFiles() files: Express.Multer.File[]) {
+//   const parsedData = JSON.parse(createCaseFileDto);
+//   return this.caseFileService.createCaseFileWithFiles(parsedData, files);
+// }
+
+  //!!!!!!ÇOKLU DOSYA DA BU ŞEKİLDE OBJE İÇERİSİNDE KEY SEÇİLİR.
+  //@UploadedFiles() files: { file?: Express.Multer.File[] }, // Access 'file' key from files object
+
+//------------------ÖNEMLİ------------------
+  //1-Eğer tek dosya gönderilecekse FileInterceptor kullanılır.
+  //@UseInterceptors(FileInterceptor('files')) 
+
+
+  //2-Çoklu dosya gönderilecekse ve dosya tipleri farklı ise FileFieldsInterceptor kullanılır.
+  //@UseInterceptors(FileFieldsInterceptor([{ name: 'files', maxCount: 10 }]))
+  
+
+  //3-Çoklu dosya ise ama dosya tipi aynı ise FileInterceptors kullanılır.
+  //@UseInterceptors(FilesInterceptor('files', maxCount)) 
+
+
+//VERİ TABANI "SİLME" İŞLEMLERİ
+//npx prisma migrate reset   -veri tabanını siler.
+
+
+//-----CASCADE
+
+
+
+//Eğer bir entitiy sildiğimizde ilişkili diğer dataların da silinmesini istiyorsak bunu prisma schema da belirtmemiz gerekiyor.
+//Mesela caseFile CaseFile @relation(fields: [caseFileId], references: [id],onDelete: Cascade)  gibi.
+//Bu sayede casefile silindiğinde witnessStatements da silinir.
+
+//-----RESTRICT (VARSAYILAN DAVRANIM)
+//Restrict: İlişkili kaydı silmeye çalıştığınızda, o kayda bağlı başka bir kayıt varsa hata verir.
+// Bu, bağlı veriler varsa ana kaydı silmeyi engeller ve tutarlılığı korur. 
+//Varsayılan davranış Restricttir, yani başka bir ayar yapmazsanız ilişkili verilerle birlikte kaydı silemezsiniz.
+
+//-----SET NULL
+//İlişkili kayıt silindiğinde, o kayıtla ilişkili alanlar null olarak güncellenir.
+//Bu, silinen kayıtla ilişkili olan verileri temizler, ancak veritabanının tutarlılığını korur.
+//caseFile CaseFile @relation(fields: [caseFileId], references: [id], onDelete: SetNull) gibi.
+
+
+//BİRDEN FAZLA VERİ KAYIT ETME
+//Örneğin prisma da birden fazla veri kayıt etmek istiyorsak.
+
+//Dto da prisma da kullanacağımız array tipinde bir field oluştururuz.
+//Controller da ise bu field içine array tipinde veri göndeririz.
+//service de ise promise.all kullanarak birden fazla veri kayıt ederiz. veya prisma.$transaction kullanarak birden fazla veri kayıt ederiz.
+//for döngüsü ile de birden fazla veri kayıt ederiz.
+
+//Örnek:  PROMISE.ALL KULLANARAK BİRDEN FAZLA VERİ KAYIT ETME
+// async createPoliceInterrogations(createPoliceInterrogationDtos: CreatePoliceInterrogationDtoArray) {
+//   const createdRecords = await Promise.all(
+//     createPoliceInterrogationDtos.data.map(dto =>
+//       this.prisma.policeInterrogation.create({
+//         data: {
+//           content: dto.content,
+//           interrogationDate: new Date(dto.interrogationDate),
+//           interrogatorName: dto.interrogatorName,
+//           caseFileId: dto.caseFileId,
+//         },
+//       })
+//     )
+//   );
+
+//   return createdRecords; // Eklenen tüm kayıtların detayları döner
+// }
+
+//Örnek:  FOR İLE BİRDEN FAZLA VERİ KAYIT ETME
+
+// const createdRecords = [];
+    
+// for (let i = 0; i < createSuspectsDto.data.length; i++) {
+//   const dto = createSuspectsDto.data[i];
+//   const createdRecord = await this.prisma.suspects.create({
+//     data: {
+//       name: dto.name,
+//       description: dto.description,
+//       fileUrl: `/uploads/${file[i].filename}`,
+//       fileName: file[i].filename,
+//       fileType: file[i].mimetype,
+//       caseFileId: dto.caseFileId,
+//     }
+//   });
+//   createdRecords.push(createdRecord);
+// }
+
+// return createdRecords;
+
+
+// async createWitnessStatementsArray(createWitnessStatementsDtos:CreateWitnessDtoArray) {
+//   const createdRecords = [];
+//   for (const dto of createWitnessStatementsDtos.data) {
+//     const createdRecord = await this.prisma.witnessStatement.create({
+//       data: dto
+//     });
+//     createdRecords.push(createdRecord);
+//   }
+//   return createdRecords;
+// }
+//Promise all daha performanslıdır. çünkü birden fazla veri kayıt ederken tek tek kayıt etmek yerine hepsini birden kayıt eder.
+//ama küçük işlemlerde çok da gerekli değildir.
+
+//Örnek: FOREACH İLE BİRDEN FAZLA VERİ KAYIT ETME
+// async createCameraRecordings(createCameraRecordingsDto: CreateCameraRecordingDtoArray, file: Express.Multer.File[]) {
+//   const createdRecords = [];
+
+//   createCameraRecordingsDto.data.forEach((dto, index) => {
+//     const createdRecord = await this.prisma.cameraRecording.create({
+//       data: {
+//         ...dto,
+//         fileUrl: `/uploads/${file[index].filename}`,
+//         fileName: file[index].filename,
+//         fileType: file[index].mimetype,
+//       }
+//     });
+//     createdRecords.push(createdRecord);
+//   });
+
+//   return createdRecords;
+// }
+
+
+//örnek:  PRİSMA $TRANSACTION KULLANARAK BİRDEN FAZLA VERİ KAYIT ETME
+//Bu yöntemde birden fazla veri kayıt ederken hata almamak için kullanılır. Mesela birinci veri kayıt edildi ama ikinci veri kayıt edilmediğinde birinci veri geri alınır.
+// async createPoliceInterrogations(createPoliceInterrogationDtos: CreatePoliceInterrogationDtoArray) {
+//   return await this.prisma.$transaction(
+//     createPoliceInterrogationDtos.data.map(dto =>
+//       this.prisma.policeInterrogation.create({ data: dto })
+//     )
+//   );
+// }
+
+//-------------------İMPORT EXPORT İŞLEMLERİ
+
+//Bir modülü başka bir modülden kullanmak için export etmemiz gerekiyor.
+//Örneğin prisma service i kullanmak için prisma modülde sercive i export etmemiz gerekiyor.
+//Daha sonra kullanacağımız modülde import etmemiz gerekiyor.
+
+// @Module({
+//   controllers: [CategoriesController],
+//   providers: [CategoriesService],
+//   exports: [CategoriesService]   //export etmemiz gerekiyor.
+// })
+// export class CategoriesModule {}
+
+//-----Daha sonra kullanacağımız modülde import etmemiz gerekiyor.
+
+// @Module({
+//   imports: [CategoriesModule],  //modülü import etmemiz gerekiyor.
+//   providers: [AppGateway],
+// })
+// export class SocketModule {}
+
+//-----Daha sonra kullanacağımız modülde inject etmemiz gerekiyor.
+// contructor(private readonly CategoryService:CategoriesService) { }
