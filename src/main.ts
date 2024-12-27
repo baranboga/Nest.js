@@ -542,3 +542,97 @@ bootstrap();
 
 //-----Daha sonra kullanacağımız modülde inject etmemiz gerekiyor.
 // contructor(private readonly CategoryService:CategoriesService) { }
+
+//--DÖNGÜSEL BAĞIMLILIKLARDA İMPORT-EXPORT İŞLEMLERİ
+
+//Dikkat döngüsel  bağımlılıklar olmamalıdır. yani A modülü B modülüne bağımlıysa B modülü A modülüne bağımlı olmamalıdır.
+//bu durumda döngüsel bağımlılık olur ve hata alırız. bu hatayı çözmek için "forwardRef" kullanırız.
+
+// NestJS, circular dependency'leri çözmek için forwardRef fonksiyonunu kullanır. 
+//Bu, bir bağımlılığın sınıfın tanımlanmasından önce çözülmesine yardımcı olur.
+
+// forwardRef(() => CategoriesService) Kullanımı
+// forwardRef(): Bu fonksiyon, NestJS'in bağımlılığı çözmeden önce sınıfın başlatılmasını sağlar. Yani, CategoriesService'in türünü çözmeden önce bu sınıfı "geciktirir", böylece döngüsel bağımlılıkların çözülmesini sağlar.
+
+// @Inject(): NestJS, forwardRef() ile belirtilen sınıfı doğru şekilde enjekte edebilmek için @Inject() dekoratörü ile işaretlenir.
+
+// -----------------------Özetle
+// Circular Dependency (dönüsel bağımlılık) hatası olduğunda, NestJS bağımlılığı doğrudan çözemez.
+// forwardRef() kullanarak, bağımlılığı "geciktiririz" ve NestJS bu bağımlılığı daha sonra çözebilir.
+// Bu yüzden, eğer bir servis A başka bir servis B'yi kullanıyorsa ve B de A'yı kullanıyorsa, NestJS bu döngüsel bağımlılığı çözebilmek için forwardRef() fonksiyonunu kullanmamızı ister.
+
+
+
+//Soketi kullanmak için CategoriesModule i SocketModule e import etmemiz gerekiyor.
+
+// @Module({
+//   imports: [forwardRef(() => CategoriesModule)],   //forwardRef ile döngüsel bağımlılığı çözeriz
+//   providers: [AppGateway],
+//   exports: [AppGateway],
+// })
+// export class SocketModule {}
+
+// constructor(
+//   @Inject(forwardRef(() => CategoriesService))
+//   private readonly CategoryService:CategoriesService
+// ) { }
+
+//Aynı şekilde CategoriesModule de SocketModule i import etmemiz gerekiyor. yeni kategori eklendiğinde sokete bildirim gitmesi için.
+
+// @Module({
+//   imports: [forwardRef(() => SocketModule)],
+//   controllers: [CategoriesController],
+//   providers: [CategoriesService],
+//   exports: [CategoriesService]
+// })
+
+//Dikkat! forwardRef sadece döngüsel bağımlılıkları çözmek için kullanılır. başka bir durumda kullanılmamalıdır.
+
+//İNJECT İŞLEMLERİ
+//Bir servisi bir başka servise inject etmek için constructor içinde inject etmemiz gerekiyor.
+//Daha sonra bu servisi kullanabiliriz.
+
+// @Inject(forwardRef(() => AppGateway))
+// private gateway: AppGateway,
+
+
+
+//----------------------------SOKET İŞLEMLERİ NOTLAR
+
+//1-Eğer server tarafında herhangi bir data değiştiği zaman , bu değişikliği client tarafına bildirmek istiyorsak soket kullanırız.
+//Bu durumda server tarafında bir soket oluştururuz ve client tarafında bir soket oluştururuz.
+
+//2-Client örneğin "data" yı dinliyor. data da ona mevcut kategorileri dönüyor. ve client tarafında bu kategorileri gösteriyor.
+//Yeni bir kategori eklendiğinde ekleme işlemi yaparken categori ekleme işlemi yaptığımız fonksiyon içinde soket üzerinden client tarafına bildirim göndeririz.
+
+// async createCategory(dto: CreateCategoryDto) {
+//   try {
+//       const newCategory = await this.prisma.category.create({
+//           data: dto,
+//       });
+
+//       const updatedCategories = await this.getCategories();
+//       this.gateway.server.emit('data', updatedCategories);   //soket üzerinden client tarafına bildirim göndeririz.
+
+//       return newCategory;
+//   } catch (e) {
+//       if (e instanceof PrismaClientKnownRequestError) {
+//           throw new ForbiddenException(e.message);
+//       }
+//       throw e;
+//   }
+// }
+
+//Zaten client socket.on ile server tarafından gönderilen veriyi dinliyor. ve bu veriyi alıyor
+
+//-----------Peki ne zaman client.emit ne zaman server.emit kullanmalıyız?
+
+// "this.gateway.server.emit": Tüm bağlı istemcilere veri göndermek için kullanılır. 
+// Bir kategori eklediğinizde, tüm istemcilerin bu eklenen kategoriyi görmesi gerektiği için bu yöntem tercih edilir.
+
+//client.emit: Belirli bir istemciye veri göndermek için kullanılır. 
+//Eğer sadece belirli bir istemciye veri göndermek isteseydiniz, o zaman client.emit kullanabilirdiniz.
+//bu durumda client in id sini alırız .
+
+
+

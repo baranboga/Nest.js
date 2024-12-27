@@ -1,9 +1,13 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AppGateway } from './app.gateway';
-import { CategoriesModule } from 'src/categories/categories.module';
+import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
-  imports: [CategoriesModule],
+  imports: [forwardRef(() => CategoriesModule)],
   providers: [AppGateway],
+  exports: [AppGateway],
 })
 export class SocketModule {}
+
+
+
